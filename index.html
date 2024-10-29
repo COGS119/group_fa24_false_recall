@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>My experiment</title>
+  <script src="https://unpkg.com/jspsych@8.0.0"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-survey-text@2.0.0"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@2.0.0"></script>
+  <!-- load in the recall lists-->
+  <script src="stimuli/roediger_mcdermott_1995_appendix_word_list.js"></script>
+  <link href="https://unpkg.com/jspsych@8.0.0/css/jspsych.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body></body>
+<script>
+
+  /* initialize jsPsych */
+  var jsPsych = initJsPsych({
+    on_finish: function () {
+      jsPsych.data.displayData();
+    }
+  });
+
+  /* create timeline */
+  var timeline = [];
+
+  //get one of the lists
+  var current_list = memory_lists[0];
+  console.log(current_list);
+
+  //add general instructions
+  // var instructions = {
+  //   "Recall the following words"
+  // }
+
+  //present each element in the list during the memory phase
+  var number_words_in_list = 15;
+  for (i = 1; i <= number_words_in_list; i++) {
+    //present the current word in the list
+    var trial = {
+      type: jsPsychHtmlKeyboardResponse,
+      choices: [],
+      stimulus: current_list["word_" + i],
+      trial_duration: 1500,
+      post_trial_gap: 1000
+    }
+    timeline.push(trial);
+  }
+
+
+  /* start the experiment */
+  jsPsych.run(timeline);
+
+</script>
+
+</html>
