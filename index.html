@@ -6,9 +6,12 @@
   <script src="https://unpkg.com/jspsych@8.0.0"></script>
   <script src="https://unpkg.com/@jspsych/plugin-survey-text@2.0.0"></script>
   <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@2.0.0"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-audio-keyboard-response@2.0.0"></script>
   <!-- load in the recall lists-->
   <script src="stimuli/roediger_mcdermott_1995_appendix_word_list.js"></script>
   <link href="https://unpkg.com/jspsych@8.0.0/css/jspsych.css" rel="stylesheet" type="text/css" />
+  <script src="https://unpkg.com/@jspsych/plugin-fullscreen@1.2.1"></script>
+  
 </head>
 
 <body></body>
@@ -20,19 +23,43 @@
       jsPsych.data.displayData();
     }
   });
-
   /* create timeline */
   var timeline = [];
 
-  //get one of the lists
+  // Add a trial to enter fullscreen mode
+var fullscreen_trial = {
+  type: jsPsychFullscreen,
+  fullscreen_mode: true
+};
+timeline.push(fullscreen_trial);
+
+// define welcome message trial
+var welcome = {
+   type: jsPsychHtmlKeyboardResponse,
+   stimulus: "Welcome to the experiment. Press any key to begin."
+ };
+
+ // add the welcome trial to the timeline variable
+ timeline.push(welcome);
+
+  //get one of the lists`
   var current_list = memory_lists[0];
   console.log(current_list);
 
-  //add general instructions
-  // var instructions = {
-  //   "Recall the following words"
-  // }
+ // define the instructions trial
+ var instructions = {
+   type: jsPsychHtmlKeyboardResponse,
+   stimulus: `
+  <p>You will hear and see different words.</p>
+  <p>Try to rememeber them all.</p>
+  <p>Press any key to begin.</p>
+`
+ };
 
+ //add the instructions trial to the timeline
+ timeline.push(instructions);
+ 
+ 
   //present each element in the list during the memory phase
   var number_words_in_list = 15;
   for (i = 1; i <= number_words_in_list; i++) {
@@ -42,11 +69,16 @@
       choices: [],
       stimulus: current_list["word_" + i],
       trial_duration: 1500,
-      post_trial_gap: 1000
+      post_trial_gap: 1000,
     }
     timeline.push(trial);
   }
-
+   // Add a trial to exit fullscreen mode at the end of the experiment
+var fullscreen_exit = {
+  type: jsPsychFullscreen,
+  fullscreen_mode: false
+};
+timeline.push(fullscreen_exit);
 
   /* start the experiment */
   jsPsych.run(timeline);
