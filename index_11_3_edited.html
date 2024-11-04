@@ -1,0 +1,200 @@
+
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>My experiment</title>
+  <script src="https://unpkg.com/jspsych@8.0.0"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-survey-text@2.0.0"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@2.0.0"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-audio-keyboard-response@2.0.0"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-survey-likert@1.1.3"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-survey-text@2.0.0"></script>
+  <!-- load in the recall lists -->
+  <script src="stimuli/roediger_mcdermott_1995_appendix_word_list.js"></script>
+  <link href="https://unpkg.com/jspsych@8.0.0/css/jspsych.css" rel="stylesheet" type="text/css" />
+  <script src="https://unpkg.com/@jspsych/plugin-fullscreen@1.2.1"></script> 
+</head>
+
+<body></body>
+<script>
+
+  /* initialize jsPsych */
+  var jsPsych = initJsPsych({
+    on_finish: function () {
+      jsPsych.data.displayData();
+    }
+  });
+
+  /* create timeline */
+  var timeline = [];
+
+  // Add a trial to enter fullscreen mode
+  var fullscreen_trial = {
+    type: jsPsychFullscreen,
+    fullscreen_mode: true
+  };
+  timeline.push(fullscreen_trial);
+
+
+  // Define welcome message trial
+  var welcome = {
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: "Welcome to the Fasle Recall Experiment.</p><p>You will see a list of words presented one at a time. Try to remember as many as you can.</p><p>After the list, you’ll be tested on recall and recognition.</p><p>Press any key to begin.</p>"
+  };
+
+  // Add the welcome trial to the timeline variable
+  timeline.push(welcome);
+
+  // create a short survey to collect a participant identifier
+   var participant_id_entry = {
+   type: jsPsychSurveyText,
+   questions: [{ prompt: "Please enter your participant ID (e.g. p1):", name: "participant_id" }],
+   on_finish: function (data) {
+     console.log(data.response)
+     jsPsych.data.addProperties({
+       participant: data.response.participant_id
+     });
+   }
+ };
+
+ // add participant_id_entry to timeline
+  timeline.push(participant_id_entry); 
+
+  // Get one of the lists and shuffle it
+  /* To-do: Determine how many lists are we gonna be used, if a lot, random or not.
+   * Need to have the record on which list is providing
+   * Need to add audio for each word present*/
+  // Totally 24 lists
+  var current_list = memory_lists[0];
+  var number_words_in_list = 15;
+  var wordArray = [];
+
+  // Create an array of words objects containing both the text and audio file name
+  for (let i = 1; i <= number_words_in_list; i++) {
+    wordArray.push({
+    word: current_list["word_" + i],
+    audioFilePath: `Audio/${current_list["List Name"]}/word_${i}.wav`
+  });
+  }
+
+  //Make the order of the words randomly
+  function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      let j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  }
+  // Apply to the array
+  shuffleArray(wordArray);
+
+  // Create trials with audio playback
+  for (let i = 0; i < wordArray.length; i++) {
+    var trial = {
+      type: jsPsychHtmlKeyboardResponse,
+      choices: [],
+      stimulus: `<p>${wordArray[i].word}</p>`,
+      trial_duration: 1000,
+     post_trial_gap: 1000,
+      on_start: function() {
+      // Play the corresponding audio file
+        var audio = new Audio(wordArray[i].audioFilePath);
+        audio.play();
+    }
+  };
+  timeline.push(trial);
+}
+  //RECALL TEST
+  // To-do: Responses from participants
+  // Click the words that may have seen ?
+  // Need to get every words response time, accuracy record
+
+
+ //RECOGNITION TEST 
+  //To do - find a way to collect participants's responses
+
+  // Select a few words randomly from the presented list for the recognition test
+  function selectRandomWords(array, num) {
+    let selectedWords = [];
+    while (selectedWords.length < num) {
+      let word = array[Math.floor(Math.random() * array.length)];
+      if (!selectedWords.includes(word)) {
+        selectedWords.push(word);
+      }
+    }
+    return selectedWords;
+  }
+
+  var instruction_trial = {
+      type: jsPsychHtmlKeyboardResponse,
+      stimulus: "Now you will rate your confidence that each word occurred on the list. <p>Please indicate whether you think the word was definitely new, probably new, probably old, or definitely old.</p> <p>Press any key to continue.</P>" 
+  };
+
+  // Add the instruction trial to the timeline
+  timeline.push(instruction_trial);
+  // Randomized the 15 words from the presented list for recognition test
+  var selected_recognition_words = selectRandomWords(wordArray, 15);
+
+  // Add "Anger" as the only false recognition item
+  var recognition_words = [
+    ...selected_recognition_words,
+    "Anger" // Not in the list, to test false recognition
+  ];
+
+  // Shuffle the recognition words array
+  recognition_words = shuffleArray(recognition_words);
+
+  // Create recognition trials
+  var recognition_trials = recognition_words.map(function(word) {
+      return {
+          type: jsPsychSurveyLikert,
+          questions: [
+              {
+                  prompt: `Did you see the word "${typeof word === 'object' ? word.word : word}"?`,
+                  labels: ["Definitely New", "Probably New", "Probably Old", "Definitely Old"],
+                  required: true,
+              }
+          ],
+          scale_width: 600
+      };
+  });
+  timeline.push(...recognition_trials);
+
+  // Added survey questions at the end of the experiment
+  var survey = {
+        type: jsPsychSurveyText,
+        questions: [
+        {prompt: "What do you think is the purpose of this experiment?", rows: 5, columns: 40},
+        {prompt: "Were there any techical problems during the experiment?", rows: 5, columns: 40},
+      ],
+        post_trial_gap: 500
+      };
+    timeline.push(survey);
+
+  // add a debriefing trail to explain the purpose of the experiment.
+    var debriefing_trial = {
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: `
+      <h2>Thank You for Participating!</h2>
+      <p>Your contribution is valuable to our research.</p>
+      <p>The purpose of this experiment was to investigate memory recognition and the phenomenon of false memories. </p>
+      <p>Specifically, we were interested in how individuals are to falsely recall words that are not present in the stimulus but are associated with studied material.</p>
+      <p>Press any key to finish the experiment.</p>
+    `
+  };
+  timeline.push(debriefing_trial);
+  
+  // Add a trial to exit fullscreen mode at the end of the experiment
+  var fullscreen_exit = {
+    type: jsPsychFullscreen,
+    fullscreen_mode: false
+  };
+  timeline.push(fullscreen_exit);
+
+  /* start the experiment */
+  jsPsych.run(timeline);
+
+</script>
+
+</html>
