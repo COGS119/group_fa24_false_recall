@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 
@@ -13,9 +12,9 @@
   <!-- load in the recall lists -->
   <script src="stimuli/roediger_mcdermott_1995_appendix_word_list.js"></script>
   <link href="https://unpkg.com/jspsych@8.0.0/css/jspsych.css" rel="stylesheet" type="text/css" />
-  <script src="https://unpkg.com/@jspsych/plugin-fullscreen@1.2.1"></script> 
-    <!-- This is for data storage - please be sure to keep this script in all future updates to the code!! -->
-    <script src="https://unpkg.com/@jspsych-contrib/plugin-pipe"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-fullscreen@1.2.1"></script>
+  <!-- This is for data storage - please be sure to keep this script in all future updates to the code!! -->
+  <script src="https://unpkg.com/@jspsych-contrib/plugin-pipe"></script>
 </head>
 
 <body></body>
@@ -49,31 +48,31 @@
   timeline.push(welcome);
 
   // create a short survey to collect a participant identifier
-   var participant_id_entry = {
-   type: jsPsychSurveyText,
-   questions: [{ prompt: "Please enter your participant ID (e.g. p1):", name: "participant_id" }],
-   on_finish: function (data) {
-     console.log(data.response)
-     jsPsych.data.addProperties({
-       participant: data.response.participant_id
-     });
-   }
- };
+  var participant_id_entry = {
+    type: jsPsychSurveyText,
+    questions: [{ prompt: "Please enter your participant ID (e.g. p1):", name: "participant_id" }],
+    on_finish: function (data) {
+      console.log(data.response)
+      jsPsych.data.addProperties({
+        participant: data.response.participant_id
+      });
+    }
+  };
 
- // add participant_id_entry to timeline
-  timeline.push(participant_id_entry); 
+  // add participant_id_entry to timeline
+  timeline.push(participant_id_entry);
 
   //TO DO: set filename based on participant info entered
   const random_id = jsPsych.randomization.randomID(10);
   const filename = `${random_id}.csv`;
 
-//create a fixation cross
-var fixation = {
- type: jsPsychHtmlKeyboardResponse,
- stimulus: '<div style="font-size:60px;">+</div>',
- choices: "NO_KEYS",
- trial_duration: 1000,
-};
+  //create a fixation cross
+  var fixation = {
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: '<div style="font-size:60px;">+</div>',
+    choices: "NO_KEYS",
+    trial_duration: 1000,
+  };
 
   // Get one of the lists and shuffle it
   /* To-do: Determine how many lists are we gonna be used, if a lot, random or not.
@@ -87,9 +86,9 @@ var fixation = {
   // Create an array of words objects containing both the text and audio file name
   for (let i = 1; i <= number_words_in_list; i++) {
     wordArray.push({
-    word: current_list["word_" + i],
-    audioFilePath: `Audio/${current_list["List Name"]}/word_${i}.wav`
-  });
+      word: current_list["word_" + i],
+      audioFilePath: `Audio/${current_list["List Name"]}/word_${i}.wav`
+    });
   }
 
   //Make the order of the words randomly
@@ -110,15 +109,15 @@ var fixation = {
       choices: [],
       stimulus: `<p>${wordArray[i].word}</p>`,
       trial_duration: 1000,
-     post_trial_gap: 1000,
-      on_start: function() {
-      // Play the corresponding audio file
+      post_trial_gap: 1000,
+      on_start: function () {
+        // Play the corresponding audio file
         var audio = new Audio(wordArray[i].audioFilePath);
         audio.play();
-    }
-  };
-  timeline.push(fixation,trial);
-}
+      }
+    };
+    timeline.push(fixation, trial);
+  }
   //RECALL TEST
   // To-do: Responses from participants
   // Click the words that may have seen ?
@@ -127,15 +126,16 @@ var fixation = {
   var recall_trial = {
     type: jsPsychSurveyText,
     questions: [
-      { prompt: "Please type as many words as you remember from the list, starting from the last few items, then the rest of the words in any order." ,
-      rows: 10,
-      columns: 50
+      {
+        prompt: "Please type as many words as you remember from the list, starting from the last few items, then the rest of the words in any order.",
+        rows: 10,
+        columns: 50
       }
     ]
   };
   timeline.push(recall_trial);
 
- //RECOGNITION TEST 
+  //RECOGNITION TEST 
   //To do - find a way to collect participants's responses
 
   // Select a few words randomly from the presented list for the recognition test
@@ -151,8 +151,8 @@ var fixation = {
   }
 
   var instruction_trial = {
-      type: jsPsychHtmlKeyboardResponse,
-      stimulus: "Now you will rate your confidence that each word occurred on the list. <p>Please indicate whether you think the word was definitely new, probably new, probably old, or definitely old.</p> <p>Press any key to continue.</P>" 
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: "Now you will rate your confidence that each word occurred on the list. <p>Please indicate whether you think the word was definitely new, probably new, probably old, or definitely old.</p> <p>Press any key to continue.</P>"
   };
 
   // Add the instruction trial to the timeline
@@ -170,40 +170,40 @@ var fixation = {
   recognition_words = shuffleArray(recognition_words);
 
   // Create recognition trials
-  var recognition_trials = recognition_words.map(function(word) {
-      return {
-          type: jsPsychSurveyLikert,
-          questions: [
-              {
-                  prompt: `Did you see the word "${typeof word === 'object' ? word.word : word}"?`,
-                  labels: ["Definitely New", "Probably New", "Probably Old", "Definitely Old"],
-                  required: true,
-              }
-          ],
-          scale_width: 600,
-          data: {word:typeof word === 'object' ? word.word : word, type: "recognition"}, // save word
-          on_finish: function(data){
-            //store response data with word information
-            console.log("Response:", data.response);
-            console.log("Word:", data.response_word);
-          }      
-      };
+  var recognition_trials = recognition_words.map(function (word) {
+    return {
+      type: jsPsychSurveyLikert,
+      questions: [
+        {
+          prompt: `Did you see the word "${typeof word === 'object' ? word.word : word}"?`,
+          labels: ["Definitely New", "Probably New", "Probably Old", "Definitely Old"],
+          required: true,
+        }
+      ],
+      scale_width: 600,
+      data: { word: typeof word === 'object' ? word.word : word, type: "recognition" }, // save word
+      on_finish: function (data) {
+        //store response data with word information
+        console.log("Response:", data.response);
+        console.log("Word:", data.response_word);
+      }
+    };
   });
   timeline.push(...recognition_trials);
 
   // Added survey questions at the end of the experiment
   var survey = {
-        type: jsPsychSurveyText,
-        questions: [
-        {prompt: "What do you think is the purpose of this experiment?", rows: 5, columns: 40},
-        {prompt: "Were there any techical problems during the experiment?", rows: 5, columns: 40},
-      ],
-        post_trial_gap: 500
-      };
-    timeline.push(survey);
+    type: jsPsychSurveyText,
+    questions: [
+      { prompt: "What do you think is the purpose of this experiment?", rows: 5, columns: 40 },
+      { prompt: "Were there any techical problems during the experiment?", rows: 5, columns: 40 },
+    ],
+    post_trial_gap: 500
+  };
+  timeline.push(survey);
 
   // add a debriefing trail to explain the purpose of the experiment.
-    var debriefing_trial = {
+  var debriefing_trial = {
     type: jsPsychHtmlKeyboardResponse,
     stimulus: `
       <h2>Thank You for Participating!</h2>
@@ -214,7 +214,7 @@ var fixation = {
     `
   };
   timeline.push(debriefing_trial);
-  
+
   // Add a trial to exit fullscreen mode at the end of the experiment
   var fullscreen_exit = {
     type: jsPsychFullscreen,
