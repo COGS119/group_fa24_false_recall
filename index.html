@@ -14,6 +14,8 @@
   <script src="stimuli/roediger_mcdermott_1995_appendix_word_list.js"></script>
   <link href="https://unpkg.com/jspsych@8.0.0/css/jspsych.css" rel="stylesheet" type="text/css" />
   <script src="https://unpkg.com/@jspsych/plugin-fullscreen@1.2.1"></script> 
+    <!-- This is for data storage - please be sure to keep this script in all future updates to the code!! -->
+    <script src="https://unpkg.com/@jspsych-contrib/plugin-pipe"></script>
 </head>
 
 <body></body>
@@ -60,6 +62,10 @@
 
  // add participant_id_entry to timeline
   timeline.push(participant_id_entry); 
+
+  //TO DO: set filename based on participant info entered
+  const random_id = jsPsych.randomization.randomID(10);
+  const filename = `${random_id}.csv`;
 
 //create a fixation cross
 var fixation = {
@@ -215,6 +221,18 @@ var fixation = {
     fullscreen_mode: false
   };
   timeline.push(fullscreen_exit);
+
+  //PLEASE KEEP FOR ALL FUTURE ITERATIONS
+  //this portion of the code ensures that the data gets sent to be stored on OSF
+  const save_data = {
+    type: jsPsychPipe,
+    action: "save",
+    experiment_id: "0uvB9AeKvuX7",
+    filename: filename,
+    data_string: () => jsPsych.data.get().csv()
+  };
+  timeline.push(save_data);
+  //PLEASE KEEP FOR ALL FUTURE ITERATIONS
 
   /* start the experiment */
   jsPsych.run(timeline);
