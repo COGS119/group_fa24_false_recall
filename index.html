@@ -211,6 +211,18 @@
   };
   timeline.push(survey);
 
+  //PLEASE KEEP FOR ALL FUTURE ITERATIONS
+  //this portion of the code ensures that the data gets sent to be stored on OSF
+  const save_data = {
+    type: jsPsychPipe,
+    action: "save",
+    experiment_id: "Cti2D7wKXWPe",
+    filename: filename,
+    data_string: () => jsPsych.data.get().csv()
+  };
+  timeline.push(save_data);
+  //PLEASE KEEP FOR ALL FUTURE ITERATIONS
+
   // add a debriefing trail to explain the purpose of the experiment.
   var debriefing_trial = {
     type: jsPsychHtmlKeyboardResponse,
@@ -230,18 +242,6 @@
     fullscreen_mode: false
   };
   timeline.push(fullscreen_exit);
-
-  //PLEASE KEEP FOR ALL FUTURE ITERATIONS
-  //this portion of the code ensures that the data gets sent to be stored on OSF
-  const save_data = {
-    type: jsPsychPipe,
-    action: "save",
-    experiment_id: "Cti2D7wKXWPe",
-    filename: filename,
-    data_string: () => jsPsych.data.get().csv()
-  };
-  timeline.push(save_data);
-  //PLEASE KEEP FOR ALL FUTURE ITERATIONS
 
   /* start the experiment */
   jsPsych.run(timeline);
