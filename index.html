@@ -8,7 +8,6 @@
   <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@2.0.0"></script>
   <script src="https://unpkg.com/@jspsych/plugin-audio-keyboard-response@2.0.0"></script>
   <script src="https://unpkg.com/@jspsych/plugin-survey-likert@1.1.3"></script>
-  <script src="https://unpkg.com/@jspsych/plugin-survey-text@2.0.0"></script>
   <!-- load in the recall lists -->
   <script src="stimuli/roediger_mcdermott_1995_appendix_word_list.js"></script>
   <link href="https://unpkg.com/jspsych@8.0.0/css/jspsych.css" rel="stylesheet" type="text/css" />
@@ -26,7 +25,39 @@
       jsPsych.data.displayData();
     }
   });
+  
+  /* Shuffle function */
+  function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  }
 
+  //audio
+  function speak(text) {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US';
+    utterance.pitch = 1;
+    utterance.rate = .5;
+    utterance.volume = 1;
+    window.speechSynthesis.speak(utterance);
+  }
+
+  // 6 lists of 12-words
+  var memory_lists = [
+    { "List Name": "Anger", "words": ["mad", "fear", "hate", "rage", "temper", "fury", "ire", "wrath", "happy", "fight", "hatred", "mean"], "critical_lure": "anger" },
+    { "List Name": "Black", "words": ["white", "dark", "cat", "charred", "night", "funeral", "color", "grief", "blue", "death", "ink", "bottom"], "critical_lure": "black" },
+    { "List Name": "Bread", "words": ["butter", "food", "eat", "sandwich", "rye", "jam", "milk", "flour", "jelly", "dough", "crust", "slice"], "critical_lure": "bread" },
+    { "List Name": "Chair", "words": ["table", "sit", "legs", "seat", "couch", "desk", "recliner", "sofa", "wood", "cushion", "swivel", "stool"], "critical_lure": "chair" },
+    { "List Name": "Cold", "words": ["hot", "snow", "warm", "winter", "ice", "wet", "frigid", "chilly", "heat", "weather", "freeze", "air"], "critical_lure": "cold" },
+    { "List Name": "Doctor", "words": ["nurse", "sick", "lawyer", "medicine", "health", "hospital", "dentist", "physician", "ill", "patient", "office", "stethoscope"], "critical_lure": "doctor" }
+  ];
+
+  // Randomized the order of the 6 lists
+  memory_lists = shuffleArray(memory_lists);
+  
   /* create timeline */
   var timeline = [];
 
@@ -41,7 +72,7 @@
   // Define welcome message trial
   var welcome = {
     type: jsPsychHtmlKeyboardResponse,
-    stimulus: "Welcome to the Fasle Recall Experiment.</p><p>You will see a list of words presented one at a time. Try to remember as many as you can.</p><p>After the list, you’ll be tested on recall and recognition.</p><p>Press any key to begin.</p>"
+    stimulus: "Welcome to the Fasle Recall Experiment.<p>You will see and listen to 6 lists of 12-words one at a time. Try to remember as many as you can.</p><p>After the list, you’ll be asked to complete a recognition test.</p><p>Press any key to begin.</p>"
   };
 
   // Add the welcome trial to the timeline variable
@@ -74,6 +105,23 @@
         random_id: random_id,
       });
   //PLEASE KEEP FOR ALL FUTURE ITERATIONS
+  
+  // Randomized the order of the words in each list
+  for (let listIndex = 0; listIndex < memory_lists.length; listIndex++) {
+    let current_list = memory_lists[listIndex];
+    let words = shuffleArray([...current_list.words]);
+
+  // Instructions before each list
+  timeline.push({
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: `<h3>List ${listIndex + 1} </h3>`,
+    choices: "NO_KEYS",
+    trial_duration: 2000
+  });
+
+  // Present each word with audio
+  for (let i = 0; i < words.length; i++) {
+    let word = words[i];
 
   //create a fixation cross
   var fixation = {
@@ -82,67 +130,43 @@
     choices: "NO_KEYS",
     trial_duration: 1000,
   };
+    timeline.push(fixation)
 
-  // Get one of the lists and shuffle it
-  /* To-do: Determine how many lists are we gonna be used, if a lot, random or not.
-   * Need to have the record on which list is providing
-   * Need to add audio for each word present*/
-  // Totally 24 lists
-  var current_list = memory_lists[0];
-  var number_words_in_list = 15;
-  var wordArray = [];
-
-  // Create an array of words objects containing both the text and audio file name
-  for (let i = 1; i <= number_words_in_list; i++) {
-    wordArray.push({
-      word: current_list["word_" + i],
-      audioFilePath: `Audio/${current_list["List Name"]}/word_${i}.wav`
-    });
-  }
-
-  //Make the order of the words randomly
-  function shuffleArray(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-      let j = Math.floor(Math.random() * (i + 1));
-      [array[i], array[j]] = [array[j], array[i]];
-    }
-    return array;
-  }
-  // Apply to the array
-  shuffleArray(wordArray);
-
-  // Create trials with audio playback
-  for (let i = 0; i < wordArray.length; i++) {
-    var trial = {
+  timeline.push({
       type: jsPsychHtmlKeyboardResponse,
-      choices: [],
-      stimulus: `<p>${wordArray[i].word}</p>`,
-      trial_duration: 1000,
-      post_trial_gap: 1000,
-      on_start: function () {
-        // Play the corresponding audio file
-        var audio = new Audio(wordArray[i].audioFilePath);
-        audio.play();
+      stimulus: `<p>${word}</p>`,
+      choices: "NO_KEYS",
+      trial_duration: 1500,
+      on_load: function() {
+        speak(word);
       }
-    };
-    timeline.push(fixation, trial);
+    });
+    }
   }
-  //RECALL TEST
-  // To-do: Responses from participants
-  // Click the words that may have seen ?
-  // Need to get every words response time, accuracy record
+      
+  // Instructions before recognition test
+  timeline.push({
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: "Now you will rate your confidence that each word occurred on the list. <p>Please indicate whether you think the word was definitely new, probably new, probably old, or definitely old.</p> <p>Press any key to continue.</P>"
 
-  var recall_trial = {
-    type: jsPsychSurveyText,
-    questions: [
-      {
-        prompt: "Please type as many words as you remember from the list, starting from the last few items, then the rest of the words in any order.",
-        rows: 10,
-        columns: 50
-      }
-    ]
-  };
-  timeline.push(recall_trial);
+  });
+
+  // Prepare recognition test with 42 items
+  var recognition_words = [];
+  for (let list of memory_lists) {
+    recognition_words.push(list.critical_lure);
+  }
+
+  // Select 2 random studied words from each list (total 12 studied words)
+  for (let list of memory_lists) {
+    recognition_words = recognition_words.concat(shuffleArray(list.words).slice(0, 2));
+  }
+
+  // 12 unrelated and 12 weakly realted words (2 unrelated & 2 weakly realted words for each list)
+  var unrelated_words = ["guitar", "planet", "elephant", "clock", "mountain", "laptop", "balloon", "window", "book", "lighthouse", "camera", "river"];
+  var weakly_related_words = ["conflict", "noise", "curtain", "void", "oven", "basket", "frame", "balance", "drift", "shade", "attention", "procedure"];
+  recognition_words = recognition_words.concat(unrelated_words, weakly_related_words);
+  recognition_words = shuffleArray(recognition_words);
 
   //RECOGNITION TEST 
   //To do - find a way to collect participants's responses
@@ -159,32 +183,13 @@
     return selectedWords;
   }
 
-  var instruction_trial = {
-    type: jsPsychHtmlKeyboardResponse,
-    stimulus: "Now you will rate your confidence that each word occurred on the list. <p>Please indicate whether you think the word was definitely new, probably new, probably old, or definitely old.</p> <p>Press any key to continue.</P>"
-  };
-
-  // Add the instruction trial to the timeline
-  timeline.push(instruction_trial);
-  // Randomized the 15 words from the presented list for recognition test
-  var selected_recognition_words = selectRandomWords(wordArray, 15);
-
-  // Add "Anger" as the only false recognition item
-  var recognition_words = [
-    ...selected_recognition_words,
-    "Anger" // Not in the list, to test false recognition
-  ];
-
-  // Shuffle the recognition words array
-  recognition_words = shuffleArray(recognition_words);
-
   // Create recognition trials
   var recognition_trials = recognition_words.map(function (word) {
     return {
       type: jsPsychSurveyLikert,
       questions: [
         {
-          prompt: `Did you see the word "${typeof word === 'object' ? word.word : word}"?`,
+          prompt: `Did you see the word "${word}"?`,
           labels: ["Definitely New", "Probably New", "Probably Old", "Definitely Old"],
           required: true,
         }
@@ -204,6 +209,8 @@
   var survey = {
     type: jsPsychSurveyText,
     questions: [
+      { prompt: "Please enter your age:", name: "age", required: true, row: 2, columns:20 },
+      { prompt: "What is your gender?", name: "gender", required: true, row: 2, columns:20 },
       { prompt: "What do you think is the purpose of this experiment?", rows: 5, columns: 40 },
       { prompt: "Were there any techical problems during the experiment?", rows: 5, columns: 40 },
     ],
